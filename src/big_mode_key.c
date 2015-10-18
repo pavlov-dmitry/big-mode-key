@@ -8,6 +8,7 @@ HHOOK hook_handle = 0;
 LRESULT PREVENT_KEY_PRESS = 1;
 
 BOOL is_space_down = FALSE;
+BOOL is_something_was_pressed = FALSE;
 DWORD space_pressed_time = 0;
 
 const int DELAY_TIME_MS = 200;
@@ -59,8 +60,27 @@ int CALLBACK WinMain(
 )
 {
     MSG msg;
+    /* int i, j; */
+    /* char str[256]; */
     key_binds_count = 0;
     read_config( "./key_binds", key_binds, MAX_KEY_BINDS, &key_binds_count );
+
+    /* for ( i = 0; i < key_binds_count; ++i ) */
+    /* { */
+    /*     KeyBind *current = &key_binds[ i ]; */
+    /*     sprintf( str, "[%d] = ", current->vk_code ); */
+    /*     OutputDebugString( str ); */
+    /*     for ( j = 0; j < current->key_combo_length; ++j ) */
+    /*     { */
+    /*         sprintf( str, "%d", current->key_combo_vk[ j ] ); */
+    /*         OutputDebugString( str ); */
+    /*         if ( j != current->key_combo_length - 1 ) */
+    /*         { */
+    /*             OutputDebugString( " + " ); */
+    /*         } */
+    /*     } */
+    /*     OutputDebugString( "\n" ); */
+    /* } */
 
     hook_handle = SetWindowsHookEx(
         WH_KEYBOARD_LL,
@@ -91,7 +111,7 @@ int CALLBACK WinMain(
 LRESULT CALLBACK hook( int nCode, WPARAM wParam, LPARAM lParam )
 {
     PKBDLLHOOKSTRUCT key_info = 0;
-    char msg[256];
+    /* char msg[256]; */
 
     if ( nCode < 0 )
     {
@@ -99,6 +119,8 @@ LRESULT CALLBACK hook( int nCode, WPARAM wParam, LPARAM lParam )
     }
 
     key_info = (PKBDLLHOOKSTRUCT)lParam;
+    /* sprintf( msg, "key: %d\n", key_info->vkCode ); */
+    /* OutputDebugString( msg ); */
 
     if ( is_ignore_key( key_info ) )
     {
@@ -144,7 +166,7 @@ void process_space_up( PKBDLLHOOKSTRUCT key_info )
     {
         resolve_delays_keys_as_normal();
     }
-    else
+    else if ( !is_something_was_pressed )
     {
         if ( ( key_info->time - space_pressed_time ) < LONG_THINK_TIMEOUT_MS)
         {
@@ -153,11 +175,13 @@ void process_space_up( PKBDLLHOOKSTRUCT key_info )
         }
     }
     is_space_down = FALSE;
+    is_something_was_pressed = FALSE;
 }
 
 BOOL process_not_space_down( PKBDLLHOOKSTRUCT key_info )
 {
     BOOL need_prevent = FALSE;
+    is_something_was_pressed = TRUE;
     if ( is_need_delay( key_info->time ) )
     {
         add_to_delayed_keys( key_info );
@@ -231,7 +255,6 @@ void press_key( int vk_code, BOOL down )
     set_down( &input, down );
     push_to_ignore_keys( vk_code, down );
     press( &input );
-
 }
 
 void press_space( BOOL down )
