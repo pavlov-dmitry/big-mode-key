@@ -154,6 +154,7 @@ int split_str( const char* str, char *out_before, char* out_after, char delimete
             memcpy( out_after, str + i + 1, after_length );
             out_after[ after_length ] = 0;
             result = 1;
+            break;
         }
     }
     return result;
